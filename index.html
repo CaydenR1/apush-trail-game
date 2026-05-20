@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>APUSH Oregon Trail</title>
+    <style>
+        body { font-family: monospace; background-color: #1a1a1a; color: #fff; padding: 20px; }
+        #resources { display: flex; justify-content: space-around; background: #333; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
+        .stat { font-weight: bold; }
+        #game-box { background: #222; border: 2px solid #555; padding: 20px; border-radius: 5px; max-width: 600px; margin: 0 auto; }
+        button { display: block; width: 100%; padding: 10px; margin: 10px 0; background: #444; color: white; border: 1px solid #666; cursor: pointer; text-align: left; }
+        button:hover { background: #555; }
+    </style>
+</head>
+<body>
+
+    <div id="game-box">
+        <!-- 5 APUSH Resource Bars -->
+        <div id="resources">
+            <span class="stat">💰 Money: <span id="money">100</span></span>
+            <span class="stat">🗳️ Support: <span id="support">50</span>%</span>
+            <span class="stat">📦 Supplies: <span id="supplies">80</span></span>
+            <span class="stat">⚔️ Power: <span id="power">60</span></span>
+            <span class="stat">🇺🇸 Unity: <span id="unity">75</span>%</span>
+        </div>
+
+        <!-- Story Text Window -->
+        <div id="story-text">
+            <p><strong>Year: 1794 (Unit 3 Checkpoint)</strong></p>
+            <p>The Whiskey Rebellion is escalating. Pennsylvania farmers refuse to pay the federal tax. How do you respond?</p>
+        </div>
+
+        <!-- Choice Buttons -->
+        <div id="choices">
+            <button onclick="makeChoice(1)">1. Send 13,000 militia troops to crush the rebellion.</button>
+            <button onclick="makeChoice(2)">2. Back down and repeal the whiskey tax entirely.</button>
+        </div>
+    </div>
+
+    <script>
+        // Game variables (just like Python, but using 'let')
+        let money = 100;
+        let support = 50;
+        let supplies = 80;
+        let power = 60;
+        let unity = 75;
+
+        function updateUI() {
+            document.getElementById('money').innerText = money;
+            document.getElementById('support').innerText = support;
+            document.getElementById('supplies').innerText = supplies;
+            document.getElementById('power').innerText = power;
+            document.getElementById('unity').innerText = unity;
+        }
+
+        function makeChoice(option) {
+            let storyDiv = document.getElementById('story-text');
+            let choicesDiv = document.getElementById('choices');
+
+            if (option === 1) {
+                money -= 10; supplies -= 15; support -= 15; unity += 20;
+                storyDiv.innerHTML = "<p><strong>Result:</strong> Washington crushes the rebellion. The Constitution's power is proven (+Unity), but anti-federalists are furious (-Support).</p>";
+            } else if (option === 2) {
+                money -= 20; support += 15; unity -= 30;
+                storyDiv.innerHTML = "<p><strong>Result:</strong> You avoided bloodshed (+Support), but the government looks incredibly weak. States realize they can ignore federal laws (-Unity).</p>";
+            }
+            
+            updateUI();
+            // Clear choices after clicking
+            choicesDiv.innerHTML = "<button onclick='location.reload()'>Restart Demo</button>";
+        }
+    </script>
+</body>
+</html>
