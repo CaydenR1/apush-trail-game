@@ -3,8 +3,7 @@
 An *Oregon Trail* style text-based RPG built to help students survive the **AP U.S. History** curriculum and score a 5 on the exam. Playable directly in your web browser via GitHub Pages!
 
 ## 🎮 Play the Game
-👉 **[CLICK HERE TO PLAY THE LIVE GAME](https://github.io)**  
-*(Note: Replace YOUR-USERNAME with your actual GitHub username in the link above!)*
+👉 **[CLICK HERE TO PLAY THE LIVE GAME](https://caydenr1.github.io/apush-trail-game/)**  
 
 ---
 
