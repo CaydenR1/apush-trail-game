@@ -2,73 +2,420 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>APUSH Oregon Trail</title>
+    <title>APUSH Historical Simulator</title>
     <style>
-        body { font-family: monospace; background-color: #1a1a1a; color: #fff; padding: 20px; }
-        #resources { display: flex; justify-content: space-around; background: #333; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
-        .stat { font-weight: bold; }
-        #game-box { background: #222; border: 2px solid #555; padding: 20px; border-radius: 5px; max-width: 600px; margin: 0 auto; }
-        button { display: block; width: 100%; padding: 10px; margin: 10px 0; background: #444; color: white; border: 1px solid #666; cursor: pointer; text-align: left; }
-        button:hover { background: #555; }
+        * { box-sizing: border-box; }
+        body { font-family: monospace; background-color: #1a1a1a; color: #fff; padding: 20px; margin: 0; }
+        
+        /* Main container */
+        #app { max-width: 700px; margin: 0 auto; }
+        
+        /* Menu Styles */
+        #menu-screen { background: #222; border: 2px solid #555; padding: 40px 20px; border-radius: 5px; text-align: center; }
+        #menu-screen h1 { font-size: 2em; margin-bottom: 30px; color: #4da6ff; }
+        #menu-screen p { margin-bottom: 40px; font-size: 0.9em; color: #aaa; }
+        
+        .menu-button { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #444; color: white; border: 2px solid #666; cursor: pointer; font-size: 1em; font-family: monospace; border-radius: 3px; transition: 0.2s; }
+        .menu-button:hover { background: #555; border-color: #4da6ff; }
+        .menu-button.primary { background: #2d5aa6; border-color: #4da6ff; }
+        .menu-button.primary:hover { background: #3d6ab6; }
+        
+        /* Game Styles */
+        #game-screen { display: none; }
+        
+        #resources { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: #333; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .stat { font-weight: bold; padding: 5px; background: #222; border-radius: 3px; }
+        .stat-label { color: #aaa; font-size: 0.9em; }
+        .stat-value { color: #4da6ff; font-size: 1.1em; }
+        
+        #game-header { background: #333; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; }
+        #checkpoint-info { color: #4da6ff; font-weight: bold; }
+        #day-info { color: #aaa; font-size: 0.9em; }
+        
+        #game-box { background: #222; border: 2px solid #555; padding: 20px; border-radius: 5px; }
+        
+        #story-text { background: #1a1a1a; padding: 15px; margin-bottom: 20px; border-left: 3px solid #4da6ff; line-height: 1.6; }
+        #story-text p { margin: 0 0 10px 0; }
+        #story-text p:last-child { margin-bottom: 0; }
+        
+        #choices { margin-bottom: 15px; }
+        button { display: block; width: 100%; padding: 12px; margin: 8px 0; background: #444; color: white; border: 1px solid #666; cursor: pointer; text-align: left; font-family: monospace; border-radius: 3px; transition: 0.2s; }
+        button:hover { background: #555; border-color: #4da6ff; }
+        button.nav-button { margin-top: 15px; background: #2d5aa6; border-color: #4da6ff; }
+        button.nav-button:hover { background: #3d6ab6; }
+        
+        .event-indicator { color: #ff9933; font-weight: bold; }
+        .result-good { color: #66ff66; }
+        .result-bad { color: #ff6666; }
     </style>
 </head>
 <body>
 
-    <div id="game-box">
-        <!-- 5 APUSH Resource Bars -->
-        <div id="resources">
-            <span class="stat">💰 Money: <span id="money">100</span></span>
-            <span class="stat">🗳️ Support: <span id="support">50</span>%</span>
-            <span class="stat">📦 Supplies: <span id="supplies">80</span></span>
-            <span class="stat">⚔️ Power: <span id="power">60</span></span>
-            <span class="stat">🇺🇸 Unity: <span id="unity">75</span>%</span>
+    <div id="app">
+        <!-- MENU SCREEN -->
+        <div id="menu-screen">
+            <h1>⚔️ APUSH Historical Simulator</h1>
+            <p>Navigate critical moments in American history and shape the nation's future.</p>
+            <button class="menu-button primary" onclick="startDemo()">📚 Try Demo (Unit 3)</button>
+            <button class="menu-button" onclick="startFullGame()">🎮 Start Full Game</button>
+            <button class="menu-button" onclick="showCredits()">ℹ️ About</button>
         </div>
 
-        <!-- Story Text Window -->
-        <div id="story-text">
-            <p><strong>Year: 1794 (Unit 3 Checkpoint)</strong></p>
-            <p>The Whiskey Rebellion is escalating. Pennsylvania farmers refuse to pay the federal tax. How do you respond?</p>
-        </div>
+        <!-- GAME SCREEN -->
+        <div id="game-screen">
+            <!-- Header with Checkpoint & Day -->
+            <div id="game-header">
+                <div id="checkpoint-info">Checkpoint: <span id="checkpoint-name">---</span></div>
+                <div id="day-info">Day <span id="current-day">1</span></div>
+            </div>
 
-        <!-- Choice Buttons -->
-        <div id="choices">
-            <button onclick="makeChoice(1)">1. Send 13,000 militia troops to crush the rebellion.</button>
-            <button onclick="makeChoice(2)">2. Back down and repeal the whiskey tax entirely.</button>
+            <!-- Resource Bars -->
+            <div id="resources">
+                <div class="stat">
+                    <div class="stat-label">💰 Money</div>
+                    <div class="stat-value"><span id="money">100</span></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">🗳️ Support</div>
+                    <div class="stat-value"><span id="support">50</span>%</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">📦 Supplies</div>
+                    <div class="stat-value"><span id="supplies">80</span></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">⚔️ Power</div>
+                    <div class="stat-value"><span id="power">60</span></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">🇺🇸 Unity</div>
+                    <div class="stat-value"><span id="unity">75</span>%</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">📈 Stability</div>
+                    <div class="stat-value"><span id="stability">70</span>%</div>
+                </div>
+            </div>
+
+            <!-- Main Game Box -->
+            <div id="game-box">
+                <div id="story-text"></div>
+                <div id="choices"></div>
+                <button class="nav-button" onclick="nextDay()">→ Next Day</button>
+                <button class="nav-button" onclick="returnToMenu()">← Return to Menu</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Game variables (just like Python, but using 'let')
-        let money = 100;
-        let support = 50;
-        let supplies = 80;
-        let power = 60;
-        let unity = 75;
+        /* ========================================
+           GAME STATE & INITIALIZATION
+           ======================================== */
+        
+        let gameState = {
+            screen: 'menu', // 'menu' or 'game'
+            currentCheckpoint: null,
+            day: 1,
+            maxDays: 30,
+            money: 100,
+            support: 50,
+            supplies: 80,
+            power: 60,
+            unity: 75,
+            stability: 70,
+            eventOccurred: false,
+            decisionPending: false
+        };
 
+        /* ========================================
+           CHECKPOINT/UNIT DEFINITIONS
+           Template: Add new checkpoints here for each AP US History unit
+           ======================================== */
+        
+        const checkpoints = {
+            unit3_whiskey: {
+                name: "Unit 3: Whiskey Rebellion (1794)",
+                year: 1794,
+                scenarios: [
+                    {
+                        day: 1,
+                        type: 'decision',
+                        title: "The Whiskey Rebellion",
+                        text: "Pennsylvania farmers refuse to pay the federal whiskey tax. President Washington needs your counsel. How do you respond?",
+                        choices: [
+                            {
+                                text: "1. Send 13,000 militia troops to crush the rebellion.",
+                                effects: { money: -10, supplies: -15, support: -15, unity: 20, stability: 10 },
+                                result: "Washington crushes the rebellion swiftly. <span class='result-good'>The Constitution's power is proven (+Unity, +Stability)</span>, but anti-federalists are furious about the crackdown (-Support)."
+                            },
+                            {
+                                text: "2. Back down and repeal the whiskey tax entirely.",
+                                effects: { money: -20, support: 15, unity: -30, stability: -15 },
+                                result: "You avoided bloodshed, gaining support from farmers. <span class='result-bad'>However, the government looks weak. States realize they can ignore federal authority (-Unity, -Stability)</span>."
+                            }
+                        ]
+                    }
+                ]
+            },
+            unit5_civil_war: {
+                name: "Unit 5: Civil War Era (1861-1865)",
+                year: 1861,
+                scenarios: [
+                    {
+                        day: 1,
+                        type: 'decision',
+                        title: "Fort Sumter Attack",
+                        text: "Confederate forces have fired on Fort Sumter. The nation is in shock. What is your response?",
+                        choices: [
+                            {
+                                text: "1. Call for immediate military mobilization and declare war.",
+                                effects: { power: 20, unity: 15, supplies: -30, money: -40, stability: -10 },
+                                result: "<span class='result-good'>Unity surges (+20 Unity)</span> and you gain military power. However, <span class='result-bad'>war is expensive and destabilizing (-40 Money, -30 Supplies)</span>."
+                            },
+                            {
+                                text: "2. Attempt diplomatic negotiations with the Confederacy.",
+                                effects: { power: -20, unity: -25, support: 10, stability: -5 },
+                                result: "You preserve resources but <span class='result-bad'>appear indecisive. North and South lose faith (-25 Unity, -20 Power)</span>. <span class='result-good'>Some diplomats support your restraint (+10 Support)</span>."
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        /* ========================================
+           EVENT SYSTEM - Random events that trigger
+           ======================================== */
+        
+        const events = [
+            {
+                trigger: 'random', // Occurs randomly
+                probability: 0.15, // 15% chance per day
+                title: "Trade Dispute with Britain",
+                text: "British merchants are threatening to embargo American goods over trade disagreements.",
+                choices: [
+                    {
+                        text: "Negotiate a favorable trade deal",
+                        effects: { money: 20, support: 5, unity: 5 }
+                    },
+                    {
+                        text: "Impose tariffs to protect American industry",
+                        effects: { money: 10, support: -10, unity: -5, stability: -10 }
+                    }
+                ]
+            },
+            {
+                trigger: 'random',
+                probability: 0.10,
+                title: "Economic Hardship",
+                text: "A banking crisis threatens the nation's financial stability.",
+                choices: [
+                    {
+                        text: "Implement emergency relief measures",
+                        effects: { money: -30, support: 15, stability: 10 }
+                    },
+                    {
+                        text: "Let the market correct itself",
+                        effects: { money: 10, support: -20, stability: -15 }
+                    }
+                ]
+            },
+            {
+                trigger: 'random',
+                probability: 0.12,
+                title: "Political Opposition",
+                text: "Rival politicians are gaining support and questioning your authority.",
+                choices: [
+                    {
+                        text: "Discredit them publicly",
+                        effects: { support: -10, unity: -5, power: 10 }
+                    },
+                    {
+                        text: "Invite them into your administration",
+                        effects: { support: 15, unity: 10, power: -5 }
+                    }
+                ]
+            }
+        ];
+
+        /* ========================================
+           UI MANAGEMENT
+           ======================================== */
+        
         function updateUI() {
-            document.getElementById('money').innerText = money;
-            document.getElementById('support').innerText = support;
-            document.getElementById('supplies').innerText = supplies;
-            document.getElementById('power').innerText = power;
-            document.getElementById('unity').innerText = unity;
+            document.getElementById('money').innerText = Math.max(0, gameState.money);
+            document.getElementById('support').innerText = Math.max(0, Math.min(100, gameState.support));
+            document.getElementById('supplies').innerText = Math.max(0, gameState.supplies);
+            document.getElementById('power').innerText = Math.max(0, gameState.power);
+            document.getElementById('unity').innerText = Math.max(0, Math.min(100, gameState.unity));
+            document.getElementById('stability').innerText = Math.max(0, Math.min(100, gameState.stability));
+            document.getElementById('current-day').innerText = gameState.day;
         }
 
-        function makeChoice(option) {
+        function showScreen(screen) {
+            document.getElementById('menu-screen').style.display = screen === 'menu' ? 'block' : 'none';
+            document.getElementById('game-screen').style.display = screen === 'game' ? 'block' : 'none';
+            gameState.screen = screen;
+        }
+
+        /* ========================================
+           SCENARIO & DECISION SYSTEM
+           ======================================== */
+        
+        function displayScenario(scenario) {
             let storyDiv = document.getElementById('story-text');
             let choicesDiv = document.getElementById('choices');
 
-            if (option === 1) {
-                money -= 10; supplies -= 15; support -= 15; unity += 20;
-                storyDiv.innerHTML = "<p><strong>Result:</strong> Washington crushes the rebellion. The Constitution's power is proven (+Unity), but anti-federalists are furious (-Support).</p>";
-            } else if (option === 2) {
-                money -= 20; support += 15; unity -= 30;
-                storyDiv.innerHTML = "<p><strong>Result:</strong> You avoided bloodshed (+Support), but the government looks incredibly weak. States realize they can ignore federal laws (-Unity).</p>";
-            }
+            let eventFlag = gameState.eventOccurred ? "<div class='event-indicator'>⚠️ EVENT TRIGGERED</div>" : "";
             
-            updateUI();
-            // Clear choices after clicking
-            choicesDiv.innerHTML = "<button onclick='location.reload()'>Restart Demo</button>";
+            storyDiv.innerHTML = eventFlag + "<p><strong>" + scenario.title + "</strong></p><p>" + scenario.text + "</p>";
+            
+            choicesDiv.innerHTML = '';
+            scenario.choices.forEach((choice, index) => {
+                let btn = document.createElement('button');
+                btn.textContent = choice.text;
+                btn.onclick = () => makeChoice(choice, scenario);
+                choicesDiv.appendChild(btn);
+            });
+
+            gameState.decisionPending = true;
         }
+
+        function makeChoice(choice, scenario) {
+            if (!gameState.decisionPending) return;
+
+            // Apply resource changes
+            gameState.money += choice.effects.money || 0;
+            gameState.support += choice.effects.support || 0;
+            gameState.supplies += choice.effects.supplies || 0;
+            gameState.power += choice.effects.power || 0;
+            gameState.unity += choice.effects.unity || 0;
+            gameState.stability += choice.effects.stability || 0;
+
+            // Clamp values
+            gameState.money = Math.max(0, gameState.money);
+            gameState.support = Math.max(0, Math.min(100, gameState.support));
+            gameState.supplies = Math.max(0, gameState.supplies);
+            gameState.power = Math.max(0, gameState.power);
+            gameState.unity = Math.max(0, Math.min(100, gameState.unity));
+            gameState.stability = Math.max(0, Math.min(100, gameState.stability));
+
+            updateUI();
+
+            // Show result
+            let storyDiv = document.getElementById('story-text');
+            let choicesDiv = document.getElementById('choices');
+            storyDiv.innerHTML = "<p><strong>Result:</strong> " + choice.result + "</p>";
+            choicesDiv.innerHTML = '';
+
+            gameState.decisionPending = false;
+        }
+
+        /* ========================================
+           DAY PROGRESSION & EVENT SYSTEM
+           ======================================== */
+        
+        function nextDay() {
+            if (gameState.decisionPending) {
+                alert("Please make a decision first.");
+                return;
+            }
+
+            gameState.day++;
+
+            if (gameState.day > gameState.maxDays) {
+                endGame();
+                return;
+            }
+
+            // Check if we get a random event (15% chance)
+            let randomEvent = Math.random() < 0.15 ? selectRandomEvent() : null;
+
+            if (randomEvent) {
+                gameState.eventOccurred = true;
+                displayScenario(randomEvent);
+            } else {
+                // Gradual resource decay if no event
+                gameState.stability -= 1;
+                gameState.supplies -= 0.5;
+                if (gameState.day % 5 === 0) gameState.money -= 5; // Weekly cost
+
+                updateUI();
+                
+                // Show day transition message
+                let storyDiv = document.getElementById('story-text');
+                let choicesDiv = document.getElementById('choices');
+                storyDiv.innerHTML = "<p><strong>Day " + gameState.day + "</strong></p><p>Another quiet day passes. The nation's condition remains stable... for now.</p>";
+                choicesDiv.innerHTML = '<p style="color: #aaa; text-align: center;">Press <strong>Next Day</strong> to continue...</p>';
+                gameState.decisionPending = false;
+            }
+        }
+
+        function selectRandomEvent() {
+            let possibleEvents = events.filter(e => Math.random() < e.probability);
+            return possibleEvents.length > 0 ? possibleEvents[Math.floor(Math.random() * possibleEvents.length)] : null;
+        }
+
+        function endGame() {
+            let storyDiv = document.getElementById('story-text');
+            let choicesDiv = document.getElementById('choices');
+            
+            let score = (gameState.unity * 2) + gameState.support + gameState.stability - Math.abs(gameState.money - 100);
+            let message = score > 150 ? "Your leadership shaped the nation!" : score > 100 ? "You made tough choices." : "The nation struggled under your rule.";
+            
+            storyDiv.innerHTML = "<p><strong>End of Checkpoint</strong></p><p>" + message + "</p><p><strong>Final Score:</strong> " + Math.round(score) + "</p>";
+            choicesDiv.innerHTML = '';
+            
+            let btn = document.createElement('button');
+            btn.textContent = "← Return to Menu";
+            btn.onclick = returnToMenu;
+            btn.className = 'nav-button';
+            choicesDiv.appendChild(btn);
+        }
+
+        /* ========================================
+           GAME START/FLOW FUNCTIONS
+           ======================================== */
+        
+        function startDemo() {
+            gameState = {
+                screen: 'game',
+                currentCheckpoint: 'unit3_whiskey',
+                day: 1,
+                maxDays: 30,
+                money: 100,
+                support: 50,
+                supplies: 80,
+                power: 60,
+                unity: 75,
+                stability: 70,
+                eventOccurred: false,
+                decisionPending: false
+            };
+
+            let checkpoint = checkpoints.unit3_whiskey;
+            document.getElementById('checkpoint-name').innerText = checkpoint.name;
+            updateUI();
+            showScreen('game');
+            
+            // Start with first scenario
+            displayScenario(checkpoint.scenarios[0]);
+        }
+
+        function startFullGame() {
+            alert("Full game mode coming soon! Start with the Demo for now.");
+        }
+
+        function showCredits() {
+            alert("APUSH Historical Simulator\n\nA game where your decisions shape American history.\n\nCurrently available: Unit 3 Demo\n\nMore checkpoints coming soon!");
+        }
+
+        function returnToMenu() {
+            showScreen('menu');
+        }
+
+        // Initialize
+        showScreen('menu');
     </script>
 </body>
 </html>
